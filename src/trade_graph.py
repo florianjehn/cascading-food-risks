@@ -307,6 +307,9 @@ class TradeGraph:
                 'xanchor': 'center',
                 'yanchor': 'top'
             },
+            font=dict(
+                family="Zilla Slab",
+            ),
             annotations=[dict(
                 x=0.55,
                 y=0,
