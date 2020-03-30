@@ -14,12 +14,15 @@ with open('../data/name_to_iso_alpha.pickle', 'rb') as handle:
     name_to_iso_alpha['Wallis and Futuna Islands'] = 'WLF'
     name_to_iso_alpha['Netherlands Antilles (former)'] = 'ANT'
     name_to_iso_alpha['French Southern and Antarctic Territories'] = 'ATF'
+    name_to_iso_alpha['Tanzania'] = 'TZA'
+    name_to_iso_alpha['Iran'] = 'IRN'
 
 
 with open('../data/name_to_centroid.pickle', 'rb') as handle:
     name_to_centroid = pickle.load(handle)
     name_to_centroid['Congo (Dem. Rep.)'] = (23.64396107, -2.87746289)
-    name_to_centroid['Democratic Republic of the Congo'] = (23.64396107, -2.87746289)
+    name_to_centroid['Democratic Republic of the Congo'] = (
+    23.64396107, -2.87746289)
     name_to_centroid['Cote d’Ivoire'] = (-5.5692157, 7.6284262)
     name_to_centroid['Laos'] = (102.4954987, 19.8562698)
     name_to_centroid['South Korea'] = (127.83916086, 36.38523983)
@@ -88,7 +91,8 @@ class TradeGraph:
             else:
                 self.G.add_edge(*edge, amount=row.value)
 
-        self.sum_of_trade = sum(d['amount'] for _, _, d in self.G.edges(data=True))
+        self.sum_of_trade = sum(
+            d['amount'] for _, _, d in self.G.edges(data=True))
 
     def get_combined_trade_estimate(self, u: str, v: str, new_amount: float):
         """
@@ -138,11 +142,11 @@ class TradeGraph:
 
     def get_import_sum(self, country):
         return sum(self.G.get_edge_data(e[0], country)['amount'] for e
-                in self.G.in_edges(country))
+                   in self.G.in_edges(country))
 
     def get_export_sum(self, country):
         return sum(self.G.get_edge_data(country, e[1])['amount'] for e
-                in self.G.out_edges(country))
+                   in self.G.out_edges(country))
 
     def reset_deficits(self):
         nx.set_node_attributes(self.G, 0, 'deficit')
@@ -168,7 +172,8 @@ class TradeGraph:
         for country, data in self.G.nodes(data=True):
             nx.set_node_attributes(
                 self.G,
-                {country: (data['deficit'] / self.get_import_sum(country)) * 100},
+                {country: (data['deficit'] / self.get_import_sum(
+                    country)) * 100},
                 'deficit_relative'
             )
 
@@ -176,7 +181,8 @@ class TradeGraph:
         return list(nx.get_node_attributes(self.G, attr).values())
 
     def plot_export_restriction_scenario(self, scenario: dict, title=None,
-                                         show_locusts=False, show_poverty=False,
+                                         show_locusts=False,
+                                         show_poverty=False,
                                          map_type=None):
         """
         Expect scenario to take form:
@@ -195,7 +201,7 @@ class TradeGraph:
         for source, export_fraction in scenario.items():
             if source not in self.G.nodes:
                 raise ValueError(f'{source} is not in graph')
-            self.apply_deficits(source, 1-export_fraction)
+            self.apply_deficits(source, 1 - export_fraction)
 
         total_deficits = sum(self.list_node_attributes('deficit'))
         total_relative_deficit = (total_deficits / self.sum_of_trade) * 100
@@ -213,7 +219,7 @@ class TradeGraph:
                 marker_line_color='darkgray',
                 marker_line_width=0.5,
                 colorbar_title='Food Import Deficit (%)',
-                colorbar_len=0.5,
+                colorbar_len=0.7,
                 colorbar_title_font_size=14
             )
         )
@@ -234,9 +240,11 @@ class TradeGraph:
                         lat=[get_lon_lat_from_country_name(source)[1],
                              get_lon_lat_from_country_name(partner)[1]],
                         mode='lines',
-                        line=dict(width=get_trade_line_width(source,  partner),
-                                  color='#2E9246'),
-                        opacity=0.5,
+                        line=dict(
+                            width=get_trade_line_width(source, partner),
+                            color='#2E9246',
+                        ),
+                        opacity=0.2,
                         showlegend=False,
                     )
                 )
@@ -245,12 +253,15 @@ class TradeGraph:
         if show_poverty:
             fig.add_trace(
                 go.Scattergeo(
-                    lon=self.poverty_data.country.apply(lambda c: get_lon_lat_from_country_name(c)[0]),
-                    lat=self.poverty_data.country.apply(lambda c: get_lon_lat_from_country_name(c)[1]),
+                    lon=self.poverty_data.country.apply(
+                        lambda c: get_lon_lat_from_country_name(c)[0]),
+                    lat=self.poverty_data.country.apply(
+                        lambda c: get_lon_lat_from_country_name(c)[1]),
                     opacity=0.9,
                     showlegend=False,
                     marker=dict(
-                        size=self.poverty_data.percent_poverty.apply(lambda p: p / 3),
+                        size=self.poverty_data.percent_poverty.apply(
+                            lambda p: p / 3),
                         opacity=1,
                         color='royalblue'
                     )
@@ -267,25 +278,30 @@ class TradeGraph:
             fig.add_trace(
                 go.Scattergeo(
                     lon=self.locust_data.country.apply(
-                        lambda c: get_lon_lat_from_country_name(c)[0]),
+                        lambda c: get_lon_lat_from_country_name(c)[0] + 3),
                     lat=self.locust_data.country.apply(
                         lambda c: get_lon_lat_from_country_name(c)[1]),
                     showlegend=False,
                     mode='markers',
                     marker=dict(
                         symbol='square',
+                        line=dict(
+                            color='black',
+                            width=1
+                        ),
                         opacity=1,
-                        color=self.locust_data.locust_risk.apply(lambda r: risk_to_color[r]),
+                        color=self.locust_data.locust_risk.apply(
+                            lambda r: risk_to_color[r]),
                     )
                 )
             )
 
         # Apply figure styling
         fig.update_layout(
-            title_font_size=18,
+            title_font_size=24,
             title={
                 'text': title or f"Effects of {', '.join(scenario.keys())} "
-                        f"restricting exports",
+                                 f"restricting exports",
                 'y': 0.9,
                 'x': 0.5,
                 'xanchor': 'center',
@@ -297,7 +313,7 @@ class TradeGraph:
                 xref='paper',
                 yref='paper',
                 text=f'{round(total_relative_deficit)}% '
-                        f'global trade shortfall',
+                     f'global trade shortfall',
                 showarrow=False
             )],
             width=1500,
@@ -319,4 +335,3 @@ class TradeGraph:
             return row.reporter, row.partner
         else:
             print(f'Unknown edge type: {row.element}')
-
